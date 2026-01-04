@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>XTAGY - SaaS</title>
+
+  <!-- Tailwind CDN (ok em DEV) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Stripe (ok em DEV / HTTP) -->
+  <script src="https://js.stripe.com/v3/"></script>
+
+  <!-- Fonte -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Estilos gerais e impressão -->
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f3f4f6;
+    }
+
+    /* Preview de impressão na tela */
+    #print-root {
+      display: none;
+    }
+
+    #print-root.active {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px;
+      background: #e5e7eb;
+      min-height: 100vh;
+    }
+
+    /* Apenas para impressão real */
+    @media print {
+      body * {
+        visibility: hidden;
+        /* esconde tudo */
+      }
+
+      #print-root,
+      #print-root * {
+        visibility: visible !important;
+        /* mostra apenas o print-root */
+      }
+
+      #print-root {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 0;
+        background: white;
+      }
+
+      @page {
+        margin: 0;
+        size: auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- APP NORMAL -->
+  <div id="root"></div>
+
+  <!-- PREVIEW / IMPRESSÃO -->
+  <div id="print-root"></div>
+
+  <!-- ENTRY POINT DO REACT -->
+  <script type="module" src="/index.tsx"></script>
+</body>
+
+</html>

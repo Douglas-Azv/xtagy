@@ -1,0 +1,20 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Regra Global: Usuários autenticados podem ler e escrever nos ambientes de dados
+    match /environments/{env}/{collection}/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Regra para Perfil na Raiz (usado durante registro e login)
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Regras de fallback para evitar erros de permissão em coleções não estruturadas
+    match /{document=**} {
+      allow read, write: if false; // Por padrão, bloqueia tudo que não foi explicitamente permitido acima
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "XTAGY - B2B Jewelry Plating SaaS",
+  "description": "A specialized B2B platform for the jewelry plating industry, automating cataloging, cost calculation, and traceability via QR codes with advanced business analytics.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
