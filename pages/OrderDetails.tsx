@@ -40,21 +40,56 @@ const OrderDetails: React.FC = () => {
   if (loading) return <p className="text-center mt-10">Carregando pedido...</p>;
   if (!order) return <p className="text-center mt-10 text-red-500">Pedido não encontrado.</p>;
 
+  // Impressão em lote
   const handlePrint = () => {
     if (pieces.length === 0) return;
 
     const labels: LabelData[] = pieces.map((piece) => ({
       title: `Peça #${piece.internalCode || piece.id.slice(0, 6)}`,
-      description: `
-        Peso: ${piece.peso_peca} g | Valor Bruto: R$ ${piece.valor_peca_bruta.toFixed(2)}
-        | Camadas: ${piece.camadas} | Mão de obra: ${piece.mao_de_obra}
-        | Preço Final: R$ ${piece.custo_final_cliente.toFixed(2)}
-      `,
-      extraInfo: piece.id, // vamos usar o QRCodeSVG na renderização de impressão
+      descriptionLines: [
+        `Peso: ${piece.peso_peca} g | Valor Bruto: R$ ${piece.valor_peca_bruta.toFixed(2)}`,
+        `Camadas: ${piece.camadas} | Mão de obra: ${piece.mao_de_obra}`,
+        `Preço Final: R$ ${piece.custo_final_cliente.toFixed(2)}`,
+      ],
+      extraInfo: piece.id,
     }));
 
     setPrintLabels(labels);
     setShowPrint(true);
+
+    setTimeout(() => {
+      const printRoot = document.getElementById('print-root');
+      if (!printRoot) return;
+      printRoot.classList.add('active');
+      window.print();
+      printRoot.classList.remove('active');
+      setShowPrint(false);
+    }, 200);
+  };
+
+  // Impressão individual
+  const handlePrintPiece = (piece: Piece) => {
+    const label: LabelData = {
+      title: `Peça #${piece.internalCode || piece.id.slice(0, 6)}`,
+      descriptionLines: [
+        `Peso: ${piece.peso_peca} g | Valor Bruto: R$ ${piece.valor_peca_bruta.toFixed(2)}`,
+        `Camadas: ${piece.camadas} | Mão de obra: ${piece.mao_de_obra}`,
+        `Preço Final: R$ ${piece.custo_final_cliente.toFixed(2)}`,
+      ],
+      extraInfo: piece.id,
+    };
+
+    setPrintLabels([label]);
+    setShowPrint(true);
+
+    setTimeout(() => {
+      const printRoot = document.getElementById('print-root');
+      if (!printRoot) return;
+      printRoot.classList.add('active');
+      window.print();
+      printRoot.classList.remove('active');
+      setShowPrint(false);
+    }, 200);
   };
 
   return (
@@ -79,7 +114,7 @@ const OrderDetails: React.FC = () => {
             onClick={handlePrint}
             className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-4 py-2 rounded-xl transition-colors"
           >
-            Imprimir Etiquetas
+            Imprimir Etiquetas do Lote
           </button>
         )}
       </div>
@@ -89,15 +124,24 @@ const OrderDetails: React.FC = () => {
           {pieces.map(piece => (
             <div key={piece.id} className="border border-slate-300 rounded-xl p-4 flex justify-between items-center bg-white shadow-sm">
               <div className="flex flex-col gap-1">
-                <p className="text-xs text-slate-500 uppercase font-bold tracking-widest">Peça #{piece.internalCode || piece.id.slice(0, 6)}</p>
+                <p className="text-xs text-slate-500 uppercase font-bold tracking-widest">
+                  Peça #{piece.internalCode || piece.id.slice(0, 6)}
+                </p>
                 <p className="text-sm text-slate-700">Peso: <span className="font-black">{piece.peso_peca} g</span></p>
                 <p className="text-sm text-slate-700">Valor Bruto: <span className="font-black">R$ {piece.valor_peca_bruta.toFixed(2)}</span></p>
                 <p className="text-sm text-slate-700">Camadas: <span className="font-black">{piece.camadas}</span></p>
                 <p className="text-sm text-slate-700">Mão de obra: <span className="font-black">{piece.mao_de_obra}</span></p>
                 <p className="text-lg text-amber-600 font-extrabold">Preço Final: R$ {piece.custo_final_cliente.toFixed(2)}</p>
               </div>
-              <div className="flex-shrink-0 ml-4">
+
+              <div className="flex flex-col items-center ml-4 gap-2">
                 <QRCodeSVG value={piece.id} size={80} />
+                <button
+                  onClick={() => handlePrintPiece(piece)}
+                  className="bg-gray-200 hover:bg-gray-300 text-slate-900 text-xs px-2 py-1 rounded transition-colors"
+                >
+                  Imprimir Peça
+                </button>
               </div>
             </div>
           ))}
@@ -106,27 +150,20 @@ const OrderDetails: React.FC = () => {
         <p className="text-slate-500 italic mt-4">Nenhuma peça cadastrada para este lote.</p>
       )}
 
-      {/* Impressão */}
+      {/* Modal de impressão */}
       {showPrint && (
         <div id="print-root" className="hidden">
           {printLabels.map((label, idx) => (
             <div key={idx} className="label mb-4 p-2 border border-slate-300">
               <p><strong>{label.title}</strong></p>
-              <p>{label.description}</p>
+              {label.descriptionLines?.map((line, i) => (
+                <p key={i}>{line}</p>
+              ))}
               <QRCodeSVG value={label.extraInfo || ''} size={80} />
             </div>
           ))}
         </div>
       )}
-
-      {showPrint && setTimeout(() => {
-        const printRoot = document.getElementById('print-root');
-        if (!printRoot) return;
-        printRoot.classList.add('active');
-        window.print();
-        printRoot.classList.remove('active');
-        setShowPrint(false);
-      }, 200)}
     </div>
   );
 };
