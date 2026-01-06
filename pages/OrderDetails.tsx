@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { apiService } from '../services/apiService';
 import { Order, Piece, LabelData } from '../types';
+import AddPieceModal from './AddPieceModal'; // importar modal
 
 const OrderDetails: React.FC = () => {
   const { id: orderId } = useParams<{ id: string }>();
@@ -11,6 +12,7 @@ const OrderDetails: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showPrint, setShowPrint] = useState(false);
   const [printLabels, setPrintLabels] = useState<LabelData[]>([]);
+  const [showAddPieceModal, setShowAddPieceModal] = useState(false); // novo estado
 
   useEffect(() => {
     const loadOrder = async () => {
@@ -37,10 +39,9 @@ const OrderDetails: React.FC = () => {
     loadOrder();
   }, [orderId]);
 
-  if (loading) return <p className="text-center mt-10">Carregando pedido...</p>;
-  if (!order) return <p className="text-center mt-10 text-red-500">Pedido não encontrado.</p>;
-
-  // Impressão em lote
+  // -----------------------
+  // Impressão
+  // -----------------------
   const handlePrint = () => {
     if (pieces.length === 0) return;
 
@@ -67,7 +68,6 @@ const OrderDetails: React.FC = () => {
     }, 200);
   };
 
-  // Impressão individual
   const handlePrintPiece = (piece: Piece) => {
     const label: LabelData = {
       title: `Peça #${piece.internalCode || piece.id.slice(0, 6)}`,
@@ -92,6 +92,20 @@ const OrderDetails: React.FC = () => {
     }, 200);
   };
 
+  // -----------------------
+  // Callback para atualização de peças
+  // -----------------------
+  const handlePieceAdded = (newPiece: Piece) => {
+    setPieces((prev) => [...prev, newPiece]);
+    setShowAddPieceModal(false);
+  };
+
+  // -----------------------
+  // Render
+  // -----------------------
+  if (loading) return <p className="text-center mt-10">Carregando pedido...</p>;
+  if (!order) return <p className="text-center mt-10 text-red-500">Pedido não encontrado.</p>;
+
   return (
     <div className="space-y-8 p-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold text-slate-900">Detalhes do Lote #{order.id.slice(0, 8)}</h1>
@@ -107,16 +121,27 @@ const OrderDetails: React.FC = () => {
         <p><strong>Data de Criação:</strong> {new Date(order.createdAt).toLocaleDateString()}</p>
       </div>
 
+      {/* ----------------- */}
+      {/* Botão Adicionar Peça */}
+      {/* ----------------- */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-slate-900">Peças do Lote</h2>
-        {pieces.length > 0 && (
+        <div className="flex gap-2">
           <button
-            onClick={handlePrint}
-            className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-4 py-2 rounded-xl transition-colors"
+            onClick={() => setShowAddPieceModal(true)}
+            className="bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-2 rounded-xl transition-colors"
           >
-            Imprimir Etiquetas do Lote
+            Adicionar Peça
           </button>
-        )}
+          {pieces.length > 0 && (
+            <button
+              onClick={handlePrint}
+              className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-4 py-2 rounded-xl transition-colors"
+            >
+              Imprimir Etiquetas do Lote
+            </button>
+          )}
+        </div>
       </div>
 
       {pieces.length > 0 ? (
@@ -148,6 +173,21 @@ const OrderDetails: React.FC = () => {
         </div>
       ) : (
         <p className="text-slate-500 italic mt-4">Nenhuma peça cadastrada para este lote.</p>
+      )}
+
+      {/* ----------------- */}
+      {/* Modal de inclusão de peça */}
+      {/* ----------------- */}
+      {showAddPieceModal && order && (
+        <AddPieceModal
+          open={showAddPieceModal}
+          onClose={() => setShowAddPieceModal(false)}
+          orderId={order.id}
+          lotId={order.id}
+          key={order.id}
+          // callback após inclusão
+          onPieceAdded={handlePieceAdded}
+        />
       )}
 
       {/* Modal de impressão */}

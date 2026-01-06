@@ -8,7 +8,7 @@ if (container) {
   // Robustly extract createRoot from the imported module
   const client = ReactDOMClient as any;
   const createRoot = client.createRoot || (client.default && client.default.createRoot);
-  
+
   if (typeof createRoot === 'function') {
     const root = createRoot(container);
     root.render(<App />);
